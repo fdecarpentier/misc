@@ -85,10 +85,10 @@ sites_density <- ggplot(points_long_sf, aes(x=Value)) +
 
 sites_final <- points_large |> 
   select(Plot, Lat, Long) |>
-  mutate(New = F) |>
+  mutate(New = "Established site") |>
   filter(Plot %in% sites_selection) |>
-  rbind(read.csv("farallon_extra.csv") |> mutate(New = T)) |> # add new sampling plots
-  mutate(Meta = ifelse(Plot %in% c(8, 15, 41, 42), T, F)) |>
+  rbind(read.csv("farallon_extra.csv") |> mutate(New = "New site")) |> # add new sampling plots
+  mutate(Meta = ifelse(Plot %in% c(8, 15, 41, 42), "Culture + metagenomic", "Culture only")) |>
   st_as_sf(crs = "EPSG:4326", coords = c("Long", "Lat"))
 
 ### Interpolation (when relevant) with the kriging method ###
@@ -248,18 +248,23 @@ labels$geometry[labels$name == "Southeast Farallon"] <- st_point(c(-123.0019, 37
 # Create the elevation plot
 elev_plot <- ggplot() +
   geom_sf(data = boundaries$two_isl, fill = "grey90", color = "grey10") + 
-  geom_sf(data = zones_final, fill = "deeppink1", color = "deeppink4", alpha = .1) +
+  geom_sf(data = zones_final, aes(fill = ""), color = "#cfff00", alpha = .5) +
   geom_sf(data = features$highway$osm_lines$geometry, color = "grey30", linewidth = .1) +
   geom_sf(data = features$building$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf(data = features$man_made$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf(data = elev_contour, color = "grey30", fill = NA, linetype = "dotted") + 
   geom_sf_text(data = labels, aes(label = name)) +
-  geom_sf_text(data = sites_final, aes(label = Plot), nudge_x = -.0001, hjust = 1, color = "darkorange3", alpha = 1) +
-  geom_sf(data = sites_final, aes(shape = New), color = "darkorange3", alpha = 1) +
-  geom_sf(data = sites_final |> filter(Meta == T), shape = 21, alpha = 1, color = "dodgerblue2", stroke = 1.2, size = 1.8) +
+  geom_sf_text(data = sites_final, aes(label = Plot, color = Meta), nudge_x = -.0001, hjust = 1) +
+  geom_sf(data = sites_final, aes(shape = New, color = Meta)) +
+  scale_fill_manual(values = c("#cfff04"), labels = expression(paste(italic("C. reinhardtii"), " optimal zone"))) +
+  scale_color_manual(values = c("#fa2f84", "#000bdc")) +
+  guides(shape = guide_legend(order = 1), color = guide_legend(order = 2), fill = guide_legend(order = 3)) +
   coord_sf(xlim = c(bbox$two_isl$xmin, bbox$two_isl$xmax), ylim = c(bbox$two_isl$ymin, bbox$two_isl$ymax)) +
   theme_void() +
-  theme(legend.position = "none")
+  theme(legend.title = element_blank(),
+        legend.direction = "horizontal",
+        legend.justification = c(0.5, 0),
+        legend.position = c(.4, .08))
 
 ### Create a plot with hillshade effect ###
 # Get elevation raster with elevatr on a buffered zone
@@ -290,24 +295,30 @@ elev_crop <- mask(elev_warp, vect(boundaries$two_isl), touches = F) |> st_as_sta
 # Created a final hillshade plot
 hill_plot <- ggplot() +
   list(
-    geom_stars(data = hill_crop, alpha = 1), 
+    geom_stars(data = hill_crop, show.legend = F, alpha = 1), 
     scale_fill_distiller(palette = "Greys", na.value = NA), #"lightsteelblue3" is okay-ish for sea
     new_scale_fill(),
-    geom_stars(data = elev_crop, alpha = 1),
+    geom_stars(data = elev_crop, show.legend = F, alpha = .8),
     scale_fill_hypso_tint_c(limits = c(-10, 75), palette = "arctic_hypso")) %>% #"dem_screen" and "arctic_hypso" are nice
   blend("multiply") +
   geom_sf(data = boundaries$two_isl, fill = NA) +
-  geom_sf(data = zones_final, fill = "deeppink1", color = "deeppink4", alpha = .1) +
+  new_scale_fill() +
+  geom_sf(data = zones_final, aes(fill = ""), color = "#cfff00", alpha = .5) +
   geom_sf(data = features$highway$osm_lines$geometry, linewidth = .1, alpha = 1) +
   geom_sf(data = features$building$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf(data = features$man_made$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf_text(data = labels, aes(label = name)) +
-  geom_sf_text(data = sites_final, aes(label = Plot), nudge_x = -.0001, hjust = 1, color = "green1", alpha = 1) +
-  geom_sf(data = sites_final, aes(shape = New), color = "green1", alpha = 1) +
-  geom_sf(data = sites_final |> filter(Meta == T), shape = 21, color = "dodgerblue2", stroke = 1.2, size = 1.8) +
+  geom_sf_text(data = sites_final, aes(label = Plot, color = Meta), nudge_x = -.0001, hjust = 1) +
+  geom_sf(data = sites_final, aes(shape = New, color = Meta)) +
+  scale_color_manual(values = c("#fa2f84", "#000bdc")) +
+  scale_fill_manual(values = c("#cfff04"), labels = expression(paste(italic("C. reinhardtii"), " optimal zone"))) +
+  guides(shape = guide_legend(order = 1), color = guide_legend(order = 2), fill = guide_legend(order = 3)) +
   coord_sf(xlim = c(bbox$two_isl$xmin, bbox$two_isl$xmax), ylim = c(bbox$two_isl$ymin, bbox$two_isl$ymax)) +
   theme_void() +
-  theme(legend.position = "none")
+  theme(legend.title = element_blank(),
+      legend.direction = "horizontal",
+      legend.justification = c(0.5, 0),
+      legend.position = c(.4, .08))
 
 ### Produces a final arrangement plot ###
 plots_selection <- c(points_plots[c("pH")], idws_plots[c("Litter_%")], kriges_plots) |>
@@ -321,11 +332,12 @@ plots_selection <- c(points_plots[c("pH")], idws_plots[c("Litter_%")], kriges_pl
 
 selection_grid <- plot_grid(plotlist = plots_selection, ncol = 3)
 
-full_grid_contour <- plot_grid(selection_grid, elev_plot, labels = c("A", "B"), nrow = 2, rel_heights = c(1, 1.3))
+full_grid_hillshade <- plot_grid(selection_grid, hill_plot, labels = c("A", "B"), nrow = 2, rel_heights = c(1, 1.4))
+ggsave("farallon_hillshade.pdf", full_grid_hillshade, width = 8, height = 8, scale = 1.1)
+ggsave("farallon_hillshade.png", full_grid_hillshade, width = 8, height = 8, scale = 1.1, device = png, type = "cairo", bg = "white")
+
+full_grid_contour <- plot_grid(selection_grid, elev_plot, labels = c("A", "B"), nrow = 2, rel_heights = c(1, 1.4))
 ggsave("farallon_contour.pdf", full_grid_contour, width = 8, height = 8, scale = 1.1)
 ggsave("farallon_contour.jpg", full_grid_contour, width = 8, height = 8, scale = 1.1, dpi = 1200)
 
-full_grid_hillshade <- plot_grid(selection_grid, hill_plot, labels = c("A", "B"), nrow = 2, rel_heights = c(1, 1.3))
-ggsave("farallon_hillshade.pdf", full_grid_hillshade, width = 8, height = 8, scale = 1.1)
-ggsave("farallon_hillshade.png", full_grid_hillshade, width = 8, height = 8, scale = 1.1, device = png, type = "cairo")
 
