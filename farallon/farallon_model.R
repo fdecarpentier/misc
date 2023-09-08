@@ -254,10 +254,10 @@ elev_plot <- ggplot() +
   geom_sf(data = features$man_made$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf(data = elev_contour, color = "grey30", fill = NA, linetype = "dotted") + 
   geom_sf_text(data = labels, aes(label = name)) +
-  geom_sf_text(data = sites_final, aes(label = Plot, color = Meta), nudge_x = -.0001, hjust = 1) +
-  geom_sf(data = sites_final, aes(shape = New, color = Meta)) +
+  geom_sf_text(data = sites_final, aes(label = Plot), color = "#000bdc", nudge_x = -.0001, hjust = 1) + #, color = Meta
+  geom_sf(data = sites_final, aes(shape = New), color = "#000bdc") + #, color = Meta
+  # scale_color_manual(values = c("#fa2f84", "#000bdc")) +
   scale_fill_manual(values = c("#cfff04"), labels = expression(paste(italic("C. reinhardtii"), " optimal zone"))) +
-  scale_color_manual(values = c("#fa2f84", "#000bdc")) +
   guides(shape = guide_legend(order = 1), color = guide_legend(order = 2), fill = guide_legend(order = 3)) +
   coord_sf(xlim = c(bbox$two_isl$xmin, bbox$two_isl$xmax), ylim = c(bbox$two_isl$ymin, bbox$two_isl$ymax)) +
   theme_void() +
@@ -308,9 +308,9 @@ hill_plot <- ggplot() +
   geom_sf(data = features$building$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf(data = features$man_made$osm_polygons$geometry, color = "seashell4", fill = "seashell1", alpha = .4) +
   geom_sf_text(data = labels, aes(label = name)) +
-  geom_sf_text(data = sites_final, aes(label = Plot, color = Meta), nudge_x = -.0001, hjust = 1) +
-  geom_sf(data = sites_final, aes(shape = New, color = Meta)) +
-  scale_color_manual(values = c("#fa2f84", "#000bdc")) +
+  geom_sf_text(data = sites_final, aes(label = Plot), color = "#000bdc", nudge_x = -.0001, hjust = 1) + # , color = Meta
+  geom_sf(data = sites_final, aes(shape = New), color = "#000bdc") + # , color = Meta
+  # scale_color_manual(values = c("#fa2f84", "#000bdc")) +
   scale_fill_manual(values = c("#cfff04"), labels = expression(paste(italic("C. reinhardtii"), " optimal zone"))) +
   guides(shape = guide_legend(order = 1), color = guide_legend(order = 2), fill = guide_legend(order = 3)) +
   coord_sf(xlim = c(bbox$two_isl$xmin, bbox$two_isl$xmax), ylim = c(bbox$two_isl$ymin, bbox$two_isl$ymax)) +
@@ -339,5 +339,4 @@ ggsave("farallon_hillshade.png", full_grid_hillshade, width = 8, height = 8, sca
 full_grid_contour <- plot_grid(selection_grid, elev_plot, labels = c("A", "B"), nrow = 2, rel_heights = c(1, 1.4))
 ggsave("farallon_contour.pdf", full_grid_contour, width = 8, height = 8, scale = 1.1)
 ggsave("farallon_contour.jpg", full_grid_contour, width = 8, height = 8, scale = 1.1, dpi = 1200)
-
 
