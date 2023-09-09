@@ -72,7 +72,7 @@ sites_plot <- ggplot(points_large, aes(x = Long, y = Lat, color = as.character(P
   theme(legend.position = "none")
 sites_plot
 
-sites_selection <- c(2, 4, 6, 8, 9, 12, 15, 16, 19, 20, 22, 24, 28, 32, 34, 38, 41, 42)
+sites_selection <- c(2, 4, 6, 7, 8, 9, 12, 15, 16, 17, 19, 20, 24, 28, 32, 34, 38, 41, 42)
 length(sites_selection)
 
 sites_density <- ggplot(points_long_sf, aes(x=Value)) +
@@ -88,8 +88,17 @@ sites_final <- points_large |>
   mutate(New = "Established site") |>
   filter(Plot %in% sites_selection) |>
   rbind(read.csv("farallon_extra.csv") |> mutate(New = "New site")) |> # add new sampling plots
+  filter(Plot != 44) |>
   mutate(Meta = ifelse(Plot %in% c(8, 15, 41, 42), "Culture + metagenomic", "Culture only")) |>
   st_as_sf(crs = "EPSG:4326", coords = c("Long", "Lat"))
+
+# Save a nice table with final sites selection
+sites_final |>
+  tibble() |>
+  mutate(geometry = as.character(geometry) |> str_remove_all(pattern = "c\\(|\\)")) |>
+  rename("Site" = "Plot", "Status" = "New", "Coordinates" = "geometry") |>
+  select(!Meta) |>
+  write.csv("sites_coord.csv", row.names = F)
 
 ### Interpolation (when relevant) with the kriging method ###
 # Determination of a buffered convex hull = contour of the points cloud
